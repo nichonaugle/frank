@@ -18,10 +18,9 @@ Actions and parameters:
 1. "read_a_file" -> parameters: {"file_path": "string"}
 2. "create_a_file" -> parameters: {"file_path": "string"}
 3. "write_to_a_file" -> parameters: {"file_path": "string", "content": "string"}
-4. "execute_terminal_command" -> parameters: {"content": "string"} 
-5. "current_status" -> parameters: {"task_status": "complete"}
+4. "execute_terminal_command" -> parameters: {"content": "string"}
 
 System Constants:
 OS Type: "Windows"
-Your working directory: "franksfolder/"
+Your working directory: "/franksfolder/"
 """
