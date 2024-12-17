@@ -1,14 +1,10 @@
-from human_interface import SpeechTask, SpeechWorker
-import threading
-import time
+from human_interface import SpeechWorker
+from llm_interface import OllamaLLM
 
 def main():
-    speech_worker = SpeechWorker()
-    speech_worker.start()
-    speech_worker.add_task_to_queue("Hey this is a speech related task")
-    speech_worker.stop()
-    while True:
-        pass
-    
+    OllamaLLM(
+        speech_worker=SpeechWorker()
+    ).launch()
+
 if __name__ == "__main__":
     main()
