@@ -59,26 +59,47 @@ class OllamaLLM():
     
     def interaction_portal(self):
         print("Type your input to send to the model (type 'exit' to quit):")
-        action_result = None
+        action_result = "None"
         while True:
-            if action_result is None:
-                user_input = input("You: ")
-                if user_input.lower() == "exit":
-                    print("Exiting...")
-                    break
-            else:
-                user_input = action_result
-            # Send the user input to ollama and capture the output
-            output = self.run_ollama_command(user_input)
-            print(output.message.content)
             try:
-                self._speech_worker.add_task_to_queue(json.loads(output.message.content)["speak"])
-                if json.loads(output.message.content)["action"] is None or json.loads(output.message.content)["action"] is "" or json.loads(output.message.content)["parameters"] is None or json.loads(output.message.content)["parameters"] is { } or json.loads(output.message.content)["parameters"] is {}:
-                    action_result = None
+                if action_result == "None":
+                    user_input = input("You: ")
+                    if user_input.lower() == "exit":
+                        print("Exiting...")
+                        break
                 else:
-                    action_result = self._action_worker.run(json.loads(output.message.content)["action"],json.loads(output.message.content)["parameters"])
+                    user_input = action_result
+                # Send the user input to ollama and capture the output
+                output = self.run_ollama_command(user_input)
+                response_content = json.loads(output.message.content)  # Parse JSON once
+                action = response_content.get("action_name")
+                parameters = response_content.get("parameters", {})
+                print(f"Action={action} Parameters={parameters}")
+                
+                # If action or parameters are invalid, reset action_result
+                if not action:
+                    action_result = "You either didnt say anothing or formatted it wrong. Try again"
+                elif action == "wait_for_human_input":
+                    action_result = "None"
+                elif action == "speak":
+                    content = parameters.get("content")
+                    if content:
+                        self._speech_worker.add_task_to_queue(content)
+                        action_result = "Successfully spoke content"
+                    else:
+                        action_result = "Error: Missing 'content' in 'parameters'"
+                else:
+                    action_result = self._action_worker.run(action, parameters)
+            except json.JSONDecodeError:
+                print("Error: Failed to decode JSON response.")
+                action_result = "Error: Failed to decode JSON response. You either formatted it wrong or need to run command again."
+            except KeyError as e:
+                print(f"Error: Missing expected key {e}")
+                action_result = e
             except Exception as err:
+                print(f"Unhandled error: {err}")
                 action_result = err
+                break
 
     def shutdown(self):
         self._speech_worker.stop()
