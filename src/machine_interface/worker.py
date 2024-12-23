@@ -1,5 +1,8 @@
 import os
 import importlib.util
+from utils import get_logger
+
+logger = get_logger()
 
 class ActionWorker:
     def __init__(self):
@@ -8,7 +11,7 @@ class ActionWorker:
 
     def load_utils(self, utils_folder):
         if not os.path.isdir(utils_folder):
-            print(f"Utils folder '{utils_folder}' not found!")
+            logger.error(f"Utils folder '{utils_folder}' not found!")
             return
 
         for file_name in os.listdir(utils_folder):
@@ -28,15 +31,15 @@ class ActionWorker:
                         if callable(func):
                             action_name = f"{module_name}"
                             self.action_map[action_name] = func
-                            print(f"Loaded action: {action_name}")
+                            logger.success(f"Loaded action: {action_name}")
 
     def run(self, action: str, parameters: dict) -> str:
         if action in self.action_map:
             try:
                 return self.action_map[action](**parameters)
             except TypeError as e:
-                print(f"Error executing action '{action}': {e}")
+                logger.error(f"Error executing action '{action}': {e}")
         else:
-            print(f"Invalid action: {action}")
+            logger.error(f"Invalid action: {action}")
 
     

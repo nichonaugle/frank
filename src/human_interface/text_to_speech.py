@@ -3,6 +3,9 @@ import pyttsx3
 import time
 import threading
 import queue
+from utils import get_logger
+
+logger = get_logger()
 
 class SpeechTask:
     def __init__(self, text):
@@ -20,7 +23,7 @@ class SpeechTask:
             self.result = "Success"
         except Exception as e:
             self.result = f"Failed: {e}"
-            print(f"{Fore.RED}[Speaking]{Style.RESET_ALL} Error during speech task: {e}")
+            logger.error(f"Error during speech task: {e}")
         finally:
             # Signal that the task is complete
             self.completed.set()
@@ -48,7 +51,7 @@ class SpeechWorker:
 
     def runner(self):
         """Worker thread function that processes tasks from the queue."""
-        print(f"{Fore.GREEN}[INFO]{Style.RESET_ALL} Speech worker started. Ready for tasks...")
+        logger.success("Speech worker started. Ready for tasks...")
         while not self.stop_signal.is_set():
             try:
                 # Get a new task; blocks until a task is available
@@ -56,14 +59,14 @@ class SpeechWorker:
                 self.running_lock.acquire()
                 if text is None:
                     # If a None task is received, stop the worker
-                    print(f"{Fore.GREEN}[INFO]{Style.RESET_ALL} Stopping worker...")
+                    logger.info(f"Stopping worker...")
                     break
-                print(f"{Fore.CYAN}[Speaking]{Style.RESET_ALL} '{text}'")
-                result = self.execute_speech_task(text).wait_for_completion()
+                logger.speaking(f"'{text}'")
+                self.execute_speech_task(text).wait_for_completion()
                 self.task_queue.task_done()
                 self.running_lock.release()
             except Exception as e:
-                print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Error during speech task: {e}")
+                logger.error(f"Error during speech task: {e}")
 
     def execute_speech_task(self, text):
         task = SpeechTask(text)
@@ -75,7 +78,7 @@ class SpeechWorker:
         if self.worker_thread.is_alive():
             self.task_queue.put(text)
         else: 
-            print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} SpeechWorker thread is not running. Tasks cannot be added until SpeechWorker is started")
+            logger.critical("SpeechWorker thread is not running. Tasks cannot be added until SpeechWorker is started")
 
     def running_tasks(self):
         if self.running_lock.locked() or not self.task_queue.empty():
