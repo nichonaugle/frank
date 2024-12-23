@@ -1,14 +1,11 @@
-from human_interface import SpeechWorker
+from human_interface import SpeechWorker, SpeechToText
 from llm_interface import OllamaLLM
 from machine_interface import ActionWorker
 
 def main():
-    """
-    action_worker=ActionWorker()
-    print(action_worker.run("read_a_file", {"file_path": "/franksfolder/test.txt"}))
-    """
     OllamaLLM(
         speech_worker=SpeechWorker(),
+        speech_to_text_worker=SpeechToText(),
         action_worker=ActionWorker()
     ).launch()
 

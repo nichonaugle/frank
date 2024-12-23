@@ -3,14 +3,15 @@ import sys
 import shutil
 import json
 from ollama import chat
-import path
+import time
 import os
 import ast
 
 class OllamaLLM():
-    def __init__(self, speech_worker=None, action_worker=None):
+    def __init__(self, speech_worker=None, action_worker=None, speech_to_text_worker=None):
         self._running_state = False
         self._speech_worker = speech_worker
+        self._speech_to_text_worker = speech_to_text_worker
         self._action_worker = action_worker
         self._communication_process = None
         self._chat_history = []
@@ -63,11 +64,19 @@ class OllamaLLM():
         action_result = "None"
         while True:
             try:
-                if action_result == "None":
-                    user_input = input("You: ")
+                if action_result == "None" or action_result == None:
+                    if self._speech_to_text_worker is None:
+                        user_input = input("You: ")
+                    else:
+                        while self._speech_worker.running_tasks():
+                            time.sleep(1) # just a tiny delay
+                        print("Please say your command: ")
+                        user_input = self._speech_to_text_worker.recognize_speech()
+                        print(f"You said: {user_input}")
+
                     if user_input.lower() == "exit":
-                        print("Exiting...")
-                        break
+                            print("Exiting...")
+                            break
                 else:
                     user_input = action_result
                 # Send the user input to ollama and capture the output

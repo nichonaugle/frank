@@ -53,7 +53,7 @@ class SpeechWorker:
             try:
                 # Get a new task; blocks until a task is available
                 text = self.task_queue.get()
-                self.running = True
+                self.running_lock.acquire()
                 if text is None:
                     # If a None task is received, stop the worker
                     print(f"{Fore.GREEN}[INFO]{Style.RESET_ALL} Stopping worker...")
@@ -61,6 +61,7 @@ class SpeechWorker:
                 print(f"{Fore.CYAN}[Speaking]{Style.RESET_ALL} '{text}'")
                 result = self.execute_speech_task(text).wait_for_completion()
                 self.task_queue.task_done()
+                self.running_lock.release()
             except Exception as e:
                 print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Error during speech task: {e}")
 
@@ -76,6 +77,11 @@ class SpeechWorker:
         else: 
             print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} SpeechWorker thread is not running. Tasks cannot be added until SpeechWorker is started")
 
+    def running_tasks(self):
+        if self.running_lock.locked() or not self.task_queue.empty():
+            return True
+        return False
+    
     def stop(self):
         """Gracefully stop the worker."""
         self.task_queue.join()
