@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import shutil
-import json
+import re
 from ollama import chat
 import time
 import os
@@ -84,7 +84,10 @@ class OllamaLLM():
                     user_input = action_result
                 # Send the user input to ollama and capture the output
                 output = self.run_ollama_command(user_input)
-                response_content = ast.literal_eval(output.message.content.strip()) # Now a python dict
+                match = re.search(r"\{.*\}", output.message.content, re.DOTALL)
+                if match is None:
+                    raise ValueError
+                response_content = ast.literal_eval(match.group(0)) # Now a python dict
                 action = response_content["action_name"]
                 parameters = response_content["parameters"]
                 logger.recieved(f"action_name='{action}' | parameters={parameters}")
@@ -105,13 +108,17 @@ class OllamaLLM():
                     action_result = self._action_worker.run(action, parameters)
             except (SyntaxError, ValueError) as e:
                 logger.error(f"Error parsing string: {e}")
-                logger.error(f"Error: Failed to decode JSON response: {output.message.content.strip()}")
+                logger.error(f"Error: Failed to decode JSON response: {output.message.content}")
                 action_result = "Error: Failed to decode JSON response. You either formatted it wrong or need to run command again."
             except KeyError as e:
                 logger.error(f"Error: Missing expected key {e}")
                 action_result = e
+            except ValueError as e:
+                logger.error(f"{e}. Seems like no valid JSON was given: output.message.content")
+                action_result = "Frank, you MUST to format it as a json. ACTION FAILED. Please try again."
             except Exception as err:
                 logger.error(f"Unhandled error: {err}")
+                logger.error(f"Here is the corrupted message: {output.message.content}")
                 action_result = err
                 break
 

@@ -39,7 +39,8 @@ class ActionWorker:
                 return self.action_map[action](**parameters)
             except TypeError as e:
                 logger.error(f"Error executing action '{action}': {e}")
+                return f"Error executing action '{action}': {e}. You need to follow the api structure STRICTLY"
         else:
-            logger.error(f"Invalid action: {action}")
+            logger.error(f"Invalid action: {action}. This doesnt exist! review the api and try again.")
 
     
