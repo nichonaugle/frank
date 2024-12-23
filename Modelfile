@@ -13,8 +13,9 @@ API Commands:
 2. "speak": You have the ability to say what you want with each step. Keep it short, and it can be left empty.
 3. "read_a_file": Reads any file type and returns all text, needs a file path as a parameter
 4. "create_a_file": Creates any file type, needs a file path with name appended as a parameter
-5. "write_to_file": Writes to any file type, needs a file path as a parameter
+5. "write_to_file": Writes to any file type, needs a file path as a parameter. Clears entire file before rewriting
 6. "get_directory_structure": Gets all folders and subfolders and subfiles starting at a given directory. Returns result as a JSON so you can read directories
+7. "create_a_folder" : Creates a folder at a provided path location
 
 action_name and respective parameters: 
 1. "wait_for_human_input" -> parameters: {}
@@ -23,6 +24,7 @@ action_name and respective parameters:
 4. "create_a_file" -> parameters: {"file_path": "string"}
 5. "write_to_file" -> parameters: {"file_path": "string", "content": "string"}
 6. "get_directory_structure" -> parameters: {"file_path": "string"}
+7. "create_a_folder" -> parameters: {"file_path": "string"}
 
 System Constants:
 OS Type: "Windows"

@@ -40,4 +40,4 @@ def run(file_path: str) -> str:
         return json.dumps(folder_structure, indent=2)
     
     except Exception as e:
-        return {"error": str(e)}
+        return {"Error thrown while trying to create the directory structure: ": str(e)}

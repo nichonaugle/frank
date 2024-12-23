@@ -5,6 +5,7 @@ import json
 from ollama import chat
 import path
 import os
+import ast
 
 class OllamaLLM():
     def __init__(self, speech_worker=None, action_worker=None):
@@ -71,9 +72,9 @@ class OllamaLLM():
                     user_input = action_result
                 # Send the user input to ollama and capture the output
                 output = self.run_ollama_command(user_input)
-                response_content = json.loads(output.message.content)  # Parse JSON once
-                action = response_content.get("action_name")
-                parameters = response_content.get("parameters", {})
+                response_content = ast.literal_eval(output.message.content.strip()) # Now a python dict
+                action = response_content["action_name"]
+                parameters = response_content["parameters"]
                 print(f"Action={action} Parameters={parameters}")
                 
                 # If action or parameters are invalid, reset action_result
@@ -82,16 +83,18 @@ class OllamaLLM():
                 elif action == "wait_for_human_input":
                     action_result = "None"
                 elif action == "speak":
-                    content = parameters.get("content")
+                    content = parameters["content"]
                     if content:
                         self._speech_worker.add_task_to_queue(content)
-                        action_result = "Successfully spoke content"
+                        action_result = "Successfully spoke content. If you finished running your commands please return the wait for human input command"
                     else:
                         action_result = "Error: Missing 'content' in 'parameters'"
                 else:
                     action_result = self._action_worker.run(action, parameters)
-            except json.JSONDecodeError:
-                print("Error: Failed to decode JSON response.")
+                print(action_result)
+            except (SyntaxError, ValueError) as e:
+                print(f"Error parsing string: {e}")
+                print(f"Error: Failed to decode JSON response: output.message.content.strip()")
                 action_result = "Error: Failed to decode JSON response. You either formatted it wrong or need to run command again."
             except KeyError as e:
                 print(f"Error: Missing expected key {e}")

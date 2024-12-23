@@ -6,20 +6,20 @@ def run(file_path: str) -> str:
         if not file_path.startswith("/franksfolder/"):
             return "You did not provide the directory path correctly. Please prefix your path with '/franksfolder/'"
 
+        if "." in file_path.split("/")[-1]:
+            return "You did not provide the directory path correctly. Please remove the file name and create the folder first."
         # Get the full path relative to the current working directory
-        full_path = os.getcwd() + file_path
+        if not file_path.endswith("/"):
+            file_path = file_path + "/"
 
+        full_path = os.getcwd() + file_path
         # Split the file path into directory and file name
         directory = os.path.dirname(full_path)
 
-        # Ensure the directory exists
-        if not os.path.exists(directory):
-            return f"File could not be created since the path {file_path} does not exist"
-
         # Create the file
-        with open(full_path, "w") as file:
-            pass  # Create an empty file
+        os.makedirs(directory, exist_ok=True)
 
-        return f"File created successfully at: {file_path}"
+        return f"Directory created successfully at: {directory}"
     except Exception as e:
-        return f"Failed to create file at {file_path}: {e}"
+        return f"Error creating directory at {directory}: {str(e)}"
+
