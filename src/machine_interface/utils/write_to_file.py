@@ -1,4 +1,4 @@
-def run(file_path: str, content: str) -> str:
+def run(file_path: str, mode: str, content: str) -> str:
     import os
 
     try:
@@ -22,10 +22,10 @@ def run(file_path: str, content: str) -> str:
         
         normalized_content = content.replace("\r\n", "\n").replace("\r", "\n")
         
-        with open(full_path, "w") as file:
+        with open(full_path, mode) as file:
             file.write(normalized_content)
 
         return f"File created successfully at: {file_path}"
 
     except Exception as e:
-        return f"Failed to create file at {file_path}: {e}"
+        return f"Failed to create/write to file at {file_path}: {e}"

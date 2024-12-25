@@ -1,5 +1,7 @@
 # franks working directory
 franksfolder/
+# chromedriver
+chromedriver.exe
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

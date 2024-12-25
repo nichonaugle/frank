@@ -11,11 +11,12 @@ from utils import get_logger
 logger = get_logger()
 
 class OllamaLLM():
-    def __init__(self, speech_worker=None, action_worker=None, speech_to_text_worker=None):
+    def __init__(self, speech_worker=None, action_worker=None, speech_to_text_worker=None, browser=None):
         self._running_state = False
         self._speech_worker = speech_worker
         self._speech_to_text_worker = speech_to_text_worker
         self._action_worker = action_worker
+        self._browser = browser
         self._communication_process = None
         self._chat_history = []
 
@@ -75,13 +76,13 @@ class OllamaLLM():
                             time.sleep(1) # just a tiny delay
                         logger.success("Please say your command: ")
                         user_input = self._speech_to_text_worker.recognize_speech()
-                        logger.sent(f"'{user_input}'")
 
                     if user_input == None or user_input.lower() == "exit":
                         logger.info("Exiting...")
                         break
                 else:
                     user_input = action_result
+                logger.sent(f"'{user_input}'")
                 # Send the user input to ollama and capture the output
                 output = self.run_ollama_command(user_input)
                 match = re.search(r"\{.*\}", output.message.content, re.DOTALL)
@@ -104,12 +105,15 @@ class OllamaLLM():
                         action_result = "Successfully spoke content. If you finished running your commands please return the wait for human input command"
                     else:
                         action_result = "Error: Missing 'content' in 'parameters'"
+                elif "browser" in action:
+                    parameters["browser"] = self._browser
+                    action_result = self._action_worker.run(action, parameters)
                 else:
                     action_result = self._action_worker.run(action, parameters)
             except (SyntaxError, ValueError) as e:
                 logger.error(f"Error parsing string: {e}")
                 logger.error(f"Error: Failed to decode JSON response: {output.message.content}")
-                action_result = "Error: Failed to decode JSON response. You either formatted it wrong or need to run command again."
+                action_result = f"Error parsing string: {e}. Failed to decode JSON response. You either formatted it wrong or need to run command again."
             except KeyError as e:
                 logger.error(f"Error: Missing expected key {e}")
                 action_result = e
